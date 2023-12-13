@@ -21,7 +21,11 @@ func notify(p Params) (Result, error) {
 
 	slog.Debug("alerter %v", strings.Join(args, " "))
 
-	bs, err := exec.Command(config.Get("alerter.path").String("/opt/homebrew/bin/alerter"), args...).Output()
+	path := "/opt/homebrew/bin/alerter"
+	if config.Exists("alerter.path") {
+		path = config.Get("alerter.path").String()
+	}
+	bs, err := exec.Command(path, args...).Output()
 	res.Out = string(bs)
 
 	return res, err
