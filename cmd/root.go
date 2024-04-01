@@ -3,8 +3,7 @@ package main
 import (
 	"github.com/starudream/go-lib/cobra/v2"
 	"github.com/starudream/go-lib/core/v2/config"
-
-	"github.com/starudream/notify-filterbox/server"
+	"github.com/starudream/go-lib/service/v2"
 )
 
 var rootCmd = cobra.NewRootCommand(func(c *cobra.Command) {
@@ -16,7 +15,7 @@ var rootCmd = cobra.NewRootCommand(func(c *cobra.Command) {
 		config.LoadFlags(c.PersistentFlags())
 	}
 	c.RunE = func(cmd *cobra.Command, args []string) error {
-		return server.Start()
+		return service.New("notify-filterbox", nil).Run()
 	}
 
 	cobra.AddConfigFlag(c)
