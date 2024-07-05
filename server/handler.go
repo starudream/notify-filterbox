@@ -5,7 +5,10 @@ import (
 	"io"
 	"net/http"
 
+	"github.com/dop251/goja"
+
 	"github.com/starudream/go-lib/core/v2/codec/json"
+	"github.com/starudream/go-lib/core/v2/config"
 	"github.com/starudream/go-lib/core/v2/gh"
 	"github.com/starudream/go-lib/core/v2/slog"
 
@@ -35,10 +38,6 @@ func handler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if msg.Ongoing {
-		return
-	}
-
 	if msg.Title == "{android.title}" {
 		msg.Title = ""
 	}
@@ -53,9 +52,33 @@ func handler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if !filter(msg) {
+		return
+	}
+
 	go send(util.UUID(), msg)
 
 	w.WriteHeader(200)
+}
+
+func filter(msg *filterbox.Message) bool {
+	vm := goja.New()
+	_, err := vm.RunString(config.Get("script").String("function filter(data) { return true; }"))
+	if err != nil {
+		slog.Error("filter script error: %v", err)
+		return false
+	}
+	fn, ok := goja.AssertFunction(vm.Get("filter"))
+	if !ok {
+		slog.Error("filter function `filter` not found")
+		return false
+	}
+	res, err := fn(goja.Undefined(), vm.ToValue(msg))
+	if err != nil {
+		slog.Error("filter function error: %v", err)
+		return false
+	}
+	return res.ToBoolean()
 }
 
 func send(id string, msg *filterbox.Message) {
