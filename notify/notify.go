@@ -45,7 +45,7 @@ func Notify(p Params) (Result, error) {
 
 	slog.Debug("exec: %s %v", path, strings.Join(args, " "))
 
-	bs, err := exec.Command(path, args...).Output()
+	bs, err := exec.Command(path, args...).CombinedOutput()
 	res.Out = string(bs)
 
 	return res, err
